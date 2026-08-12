@@ -1,0 +1,34 @@
+# .github/workflows/proveniencia.yml
+name: Proveniencia SLSA (Mini-Lab Cap. 15)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write        # OIDC: assina a proveniencia sem segredo de longa duracao
+  attestations: write    # registra a atestacao no repositorio
+
+jobs:
+  build-e-atesta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Construir o artefato
+        run: bash build.sh
+
+      - name: Gerar atestacao de proveniencia (SLSA / in-toto)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/app.txt'
+
+      - name: Publicar o artefato (para download e verificacao)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: dist/app.txt
+
